@@ -29,6 +29,14 @@ sub _build_map_in {
     return sub { return ( shift->write_input ) };
 }
 
+sub load_engrad {
+  my $self   = shift;
+  local $CWD = $self->scratch if ( $self->has_scratch );
+  my @engrad = $self->engrad_fn->lines;
+  print foreach @engrad;  
+
+}
+
 sub _build_map_out {
     # this builds the default behavior, can be set anew via new
     my $sub_cr = sub {

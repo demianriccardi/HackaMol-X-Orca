@@ -22,7 +22,7 @@ my $orca = HackaMol::X::Orca->new(
       scratch => 'tmp',
 );
 
-my @energies = $orca->opt;
+my @energies = $orca->ener;
 
 print Dumper \@energies;
 my $t2 = time;
@@ -42,9 +42,11 @@ my $orca2 = HackaMol::X::Orca->new(
       scratch => 'tmp',
 );
 
-@energies = $orca2->opt;
+@energies = $orca2->ener;
 
 print Dumper \@energies;
+$orca->map_input;
+$orca2->load_engrad;
 
 my $t3 = time;
 

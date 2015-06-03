@@ -154,17 +154,24 @@ sub write_input {
       }
       foreach my $group ( $mol->all_bonds) {
         next unless $group->is_constrained;
-        $input .= "\{B ".$_->iatom . " C\}\n" foreach $group->all_atoms;
+        $input .= "\{B ";
+        $input .= $_->iatom . " " foreach $group->all_atoms;
+        $input .= "C\}\n"
       }
       foreach my $group ( $mol->all_angles) {
         next unless $group->is_constrained;
-        $input .= "\{A ".$_->iatom . " C\}\n" foreach $group->all_atoms;
+        $input .= "\{A ";
+        $input .= $_->iatom . " " foreach $group->all_atoms;
+        $input .= "C\}\n"
       }
       foreach my $group ( $mol->all_dihedrals) {
         next unless $group->is_constrained;
-        $input .= "\{D ".$_->iatom . " C\}\n" foreach $group->all_atoms;
+        $input .= "\{D ";
+        $input .= $_->iatom . " " foreach $group->all_atoms;
+        $input .= "C\}\n"
       }
-      $input .= "\%end\n";
+      $input .= "end\n";
+      $input .= "end\n";
     }
     $self->in_fn->spew($input);
     return ($input);

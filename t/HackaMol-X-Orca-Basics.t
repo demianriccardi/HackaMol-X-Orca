@@ -48,7 +48,6 @@ my $mol = HackaMol::Molecule->new(
 );
 $mol->multiplicity(1);
 my $obj;
-
 {    # test basic functionality
 
     lives_ok {

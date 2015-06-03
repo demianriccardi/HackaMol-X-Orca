@@ -24,6 +24,12 @@ sub build_command {
     return $cmd;
 }
 
+sub save_config {
+    # make something that can be used to save the configuration of the calculator
+    my $self = shift;
+
+}
+
 sub _build_map_in {
     # this builds the default behavior, can be set anew via new
     return sub { return ( shift->write_input ) };
@@ -67,10 +73,20 @@ has theory => (
     default => 'HF-3c'
 );
 
-has calc => ( 
-    is  => 'rw',
-    isa => 'Str',
+has has_constraints => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
 );
+
+has calc => ( 
+    is   => 'rw',
+    isa  => 'Str',
+    lazy => 1,
+    builder => '_build_calc',
+);
+
+sub _build_calc { shift->theory} 
 
 sub ener {
     my $self = shift;
@@ -119,11 +135,37 @@ sub BUILD {
 
 sub write_input {
     my $self = shift;
+    my $mol = $self->mol;
     my $input;
     $input .= '! '. $self->calc . "\n";
     $input .= '* xyz '. $self->mol->charge . ' '. $self->mol->multiplicity . "\n";
-    $input .= sprintf( "%-3s %12.8f %12.8f %12.8f\n", $_->symbol, @{$_->xyz}) foreach $self->mol->all_atoms;
+    foreach ($self->mol->all_atoms){
+      $input .= sprintf( "%-3s %12.8f %12.8f %12.8f\n", $_->symbol, @{$_->xyz});
+    }
     $input .= "\*\n";
+# constraints
+# https://sites.google.com/site/orcainputlibrary/geometry-optimizations
+    if ($self->has_constraints){
+      # cartesian constraints
+      $input .= "\%geom\nConstraints\n";
+      foreach my $group ( $mol->all_groups) {
+        next unless $group->is_constrained;
+        $input .= "\{C ".$_->iatom . " C\}\n" foreach $group->all_atoms; 
+      }
+      foreach my $group ( $mol->all_bonds) {
+        next unless $group->is_constrained;
+        $input .= "\{B ".$_->iatom . " C\}\n" foreach $group->all_atoms;
+      }
+      foreach my $group ( $mol->all_angles) {
+        next unless $group->is_constrained;
+        $input .= "\{A ".$_->iatom . " C\}\n" foreach $group->all_atoms;
+      }
+      foreach my $group ( $mol->all_dihedrals) {
+        next unless $group->is_constrained;
+        $input .= "\{D ".$_->iatom . " C\}\n" foreach $group->all_atoms;
+      }
+      $input .= "\%end\n";
+    }
     $self->in_fn->spew($input);
     return ($input);
 }

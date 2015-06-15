@@ -14,6 +14,8 @@ use MooseX::Types::Path::Tiny qw/Path Paths AbsPath AbsPaths/;
 
 with qw(HackaMol::X::ExtensionRole);
 
+my $bohr_to_angs = 0.52917721092;
+
 sub build_command {
     my $self = shift;
     my $cmd;
@@ -36,10 +38,35 @@ sub _build_map_in {
 }
 
 sub load_engrad {
+
   my $self   = shift;
   local $CWD = $self->scratch if ( $self->has_scratch );
-  my @engrad = $self->engrad_fn->lines;
-  print foreach @engrad;  
+  my @engrad = grep {! m/#/} $self->engrad_fn->lines;
+  chomp @engrad;
+  my $nat  = shift @engrad;
+  my $ener = shift @engrad;
+  my @forces;
+  foreach (1 .. $nat){
+    push @forces, V(1 * shift @engrad, 1 * shift @engrad, 1 * shift @engrad);
+  }
+  my @atoms;
+  foreach (1 .. $nat){
+    my @line = split(' ', shift @engrad);
+    push @atoms, HackaMol::Atom->new(Z => $line[0], 
+                                     coords => [V(map {$_*$bohr_to_angs} @line[1,2,3])]
+    ); 
+  }
+  use Data::Dumper;
+  print Dumper \@atoms;
+  #my $mol;
+  #$self->has_mol ? $mol = $self->mol : $mol = HackaMol->new(atoms=>[@atoms]);
+
+  #if ($self->has_mol){
+  #  my $mol = $self->mol;
+  #  foreach my $iat (0 .. $#atoms){
+  #    my $matom = 
+  #  }
+  #} 
 
 }
 
@@ -95,10 +122,21 @@ sub ener {
     return $self->map_output;
 }
 
+sub engrad {
+    my $self = shift;
+    $self->calc($self->theory. " engrad");
+    $self->map_input;
+    my @out = $self->map_output;
+    $self->load_engrad;
+    return $self->map_output;
+}
+
 sub opt {
     my $self = shift;
     $self->calc($self->theory." opt"); 
     $self->map_input;
+        
+
     return $self->map_output;    
 }
 

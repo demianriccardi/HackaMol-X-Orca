@@ -23,8 +23,6 @@ foreach (0 .. $mol->tmax){
   my @energies = $orca2->ener;
   print Dumper \@energies;
 }
-#$orca->map_input;
-#$orca2->load_engrad;
 
 my $t2 = time;
 

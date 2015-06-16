@@ -40,24 +40,32 @@ sub _build_map_in {
 sub load_engrad {
 
   my $self   = shift;
+
   local $CWD = $self->scratch if ( $self->has_scratch );
   my @engrad = grep {! m/#/} $self->engrad_fn->lines;
   chomp @engrad;
-  my $nat  = shift @engrad;
-  my $ener = shift @engrad;
+
+  my $nat  = 1 * shift @engrad;
+  my $ener = 1 * shift @engrad;
+
   my @forces;
   foreach (1 .. $nat){
-    push @forces, V(1 * shift @engrad, 1 * shift @engrad, 1 * shift @engrad);
+    my @dedxyz = (1 * shift @engrad, 1 * shift @engrad, 1 * shift @engrad);
+    #dE dx is in hartree per angstrom
+    push @forces, V( map{$_ / $bohr_to_angs} @dedxyz );
   }
+
   my @atoms;
-  foreach (1 .. $nat){
+  foreach my $iat (0 .. $nat-1){
     my @line = split(' ', shift @engrad);
     push @atoms, HackaMol::Atom->new(Z => $line[0], 
-                                     coords => [V(map {$_*$bohr_to_angs} @line[1,2,3])]
+                                     coords => [V(map {$_*$bohr_to_angs} @line[1,2,3])],
+                                     forces => [$forces[$iat]],
     ); 
   }
-  use Data::Dumper;
-  print Dumper \@atoms;
+
+  return ( energy => $ener, atoms  => \@atoms );
+
   #my $mol;
   #$self->has_mol ? $mol = $self->mol : $mol = HackaMol->new(atoms=>[@atoms]);
 
@@ -100,6 +108,12 @@ has theory => (
     default => 'HF-3c'
 );
 
+has ignore_forces => (
+    is  => 'rw',
+    isa => 'Int',
+    default => 1,
+);
+
 has has_constraints => (
     is      => 'rw',
     isa     => 'Bool',
@@ -127,8 +141,42 @@ sub engrad {
     $self->calc($self->theory. " engrad");
     $self->map_input;
     my @out = $self->map_output;
-    $self->load_engrad;
-    return $self->map_output;
+    my %engrad = $self->load_engrad;
+    my @atoms = @{ $engrad{atoms} };
+
+    if ($self->has_mol){
+
+      my $mol = $self->mol;
+
+      unless ( $mol->count_atoms == scalar(@atoms) ){
+        croak "number of atoms in molecule not same as in engrad calculation";
+      }
+
+      foreach my $iatom (0 .. $#atoms){
+
+        my $oatom = $atoms[$iatom];
+        my $matom = $mol->get_atoms($iatom); 
+
+        unless ($oatom->Z == $matom->Z ){
+          croak "atom $iatom has changed Z\n";
+        }
+        # atoms will generally not have forces
+
+        unless ($self->ignore_forces){
+          $matom->push_forces(V(999,999,999)) until ($matom->count_forces == $matom->count_coords );
+        }
+
+        $matom->push_forces($oatom->force) unless ($self->ignore_forces);
+        $matom->push_coords($oatom->xyz);
+
+      }
+
+    }
+    else {
+      $self->mol(HackaMol::Molecule->new(atoms=>[@atoms]));
+    }
+    $self->mol->energy($engrad{energy});
+    return @out;
 }
 
 sub opt {

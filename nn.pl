@@ -8,28 +8,27 @@ use Data::Dumper;
 my $t1 = time;
 my $mol = HackaMol::Molecule->new(
           charges => [0],
-          atoms =>[
+          atoms   => [
                    HackaMol::Atom->new(Z =>7, coords=>[V(0.0,0.0,0.0)] ),
                    HackaMol::Atom->new(Z =>7, coords=>[V(1.5,0.0,0.0)] ),
           ]
 );
+
 $mol->multiplicity(1);
 
 my $orca = HackaMol::X::Orca->new(
-      mol    => $mol,
-      theory => 'HF-3c',
-      exe    => '/Users/riccade/perl5/apps/orca_3_0_3_macosx_openmpi165/orca',
+      mol     => $mol,
+      theory  => 'HF-3c',
+      exe     => '/Users/riccade/perl5/apps/orca_3_0_3_macosx_openmpi165/orca',
       scratch => 'tmp',
 );
 
 my $t2 = time;
 
 #my @energies = $orca->engrad;
-$orca->engrad;
-my %blah = $orca->load_engrad;
+my $mol2 = $orca->load_engrad;
 my @energies = ();
-#print Dumper \%blah;
-my $mol2 = $orca->mol;
+#my $mol2 = $orca->mol;
 $mol2->print_xyz;
 
 my $t3 = time;

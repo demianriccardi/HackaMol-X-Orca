@@ -38,7 +38,7 @@ sub _build_map_in {
 }
 
 sub load_engrad {
-
+  #return molecule
   my $self   = shift;
 
   local $CWD = $self->scratch if ( $self->has_scratch );
@@ -64,17 +64,7 @@ sub load_engrad {
     ); 
   }
 
-  return ( energy => $ener, atoms  => \@atoms );
-
-  #my $mol;
-  #$self->has_mol ? $mol = $self->mol : $mol = HackaMol->new(atoms=>[@atoms]);
-
-  #if ($self->has_mol){
-  #  my $mol = $self->mol;
-  #  foreach my $iat (0 .. $#atoms){
-  #    my $matom = 
-  #  }
-  #} 
+  return ( HackaMol::Molecule->new (energy => [$ener], atoms  => \@atoms ) );
 
 }
 

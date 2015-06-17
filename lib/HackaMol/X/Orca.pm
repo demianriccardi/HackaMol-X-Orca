@@ -12,7 +12,7 @@ use namespace::autoclean;
 use Carp;
 use MooseX::Types::Path::Tiny qw/Path Paths AbsPath AbsPaths/;
 
-with qw(HackaMol::X::ExtensionRole);
+with qw(HackaMol::X::Roles::ExtensionRole);
 
 my $bohr_to_angs = 0.52917721092;
 
@@ -175,7 +175,8 @@ sub engrad {
     else {
       $self->mol(HackaMol::Molecule->new(atoms=>[@atoms]));
     }
-    $self->mol->energy($engrad{energy});
+
+    $self->mol->push_energy($engrad{energy});
     return @out;
 }
 

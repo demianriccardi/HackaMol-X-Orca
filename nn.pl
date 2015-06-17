@@ -28,7 +28,9 @@ my $t2 = time;
 $orca->engrad;
 my %blah = $orca->load_engrad;
 my @energies = ();
-print Dumper \%blah;
+#print Dumper \%blah;
+my $mol2 = $orca->mol;
+$mol2->print_xyz;
 
 my $t3 = time;
 printf ("HackaMol setup time: %10.2f\n", $t2-$t1);

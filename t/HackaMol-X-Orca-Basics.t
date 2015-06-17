@@ -31,7 +31,7 @@ my $cwd = getcwd;
                         calc 
                        );
 
-    my @roles = qw(HackaMol::ExeRole HackaMol::PathRole);
+    my @roles = qw(HackaMol::Roles::ExeRole HackaMol::Roles::PathRole);
 
     map has_attribute_ok( 'HackaMol::X::Orca', $_ ), @attributes;
     map           can_ok( 'HackaMol::X::Orca', $_ ), @methods;

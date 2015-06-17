@@ -37,6 +37,18 @@ sub _build_map_in {
     return sub { return ( shift->write_input ) };
 }
 
+sub load_trj {
+  my $self = shift;
+  local $CWD = $self->scratch if ( $self->has_scratch );
+  my $fh = $self->trj_fn->filehandle("<");
+  my @atoms = HackaMol->new->read_xyz_atoms($fh);
+  close($fh);
+  my @energies = map {m/(-\d+\.\d+)/;$1} grep {m/Coord/} $self->trj_fn->lines ;
+
+  return ( HackaMol::Molecule->new(atoms=> \@atoms, energy => \@energies) );
+
+}
+
 sub load_engrad {
   #return molecule
   my $self   = shift;

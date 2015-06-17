@@ -6,29 +6,18 @@ use Time::HiRes qw(time);
 use Data::Dumper;
 
 my $t1 = time;
-my $mol = HackaMol::Molecule->new(
-          charges => [0],
-          atoms =>[
-                   HackaMol::Atom->new(Z =>7, coords=>[V(0.0,0.0,0.0)] ),
-                   HackaMol::Atom->new(Z =>7, coords=>[V(1.3,0.0,0.0)] ),
-          ]
-);
-$mol->multiplicity(1);
+my $mol = HackaMol::Molecule->new;
 
 my $orca = HackaMol::X::Orca->new(
-      mol    => $mol,
-      theory => 'HF-3c',
-      exe    => '/Users/riccade/perl5/apps/orca_3_0_3_macosx_openmpi165/orca',
+      mol     => $mol,
+      theory  => 'HF-3c',
+      exe     => '/Users/riccade/perl5/apps/orca_3_0_3_macosx_openmpi165/orca',
       scratch => 'tmp',
 );
 
 my $t2 = time;
 
-my @energies = $orca->ener;
-
-print Dumper \@energies;
-
-my $t3 = time;
-printf ("HackaMol setup time: %10.2f\n", $t2-$t1);
-printf ("Orca     Calc  time: %10.2f\n", $t3-$t2);
-
+#my ($mol2) = $orca->engrad;
+my $mol2 = $orca->load_trj;
+$mol2->print_xyz_ts([0 .. $mol2->tmax]);
+say foreach $mol2->all_energy;

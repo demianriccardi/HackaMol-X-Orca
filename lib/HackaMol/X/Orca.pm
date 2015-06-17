@@ -131,43 +131,9 @@ sub engrad {
     $self->calc($self->theory. " engrad");
     $self->map_input;
     my @out = $self->map_output;
-    my %engrad = $self->load_engrad;
-    my @atoms = @{ $engrad{atoms} };
+    my $mol = $self->load_engrad;
 
-    if ($self->has_mol){
-
-      my $mol = $self->mol;
-
-      unless ( $mol->count_atoms == scalar(@atoms) ){
-        croak "number of atoms in molecule not same as in engrad calculation";
-      }
-
-      foreach my $iatom (0 .. $#atoms){
-
-        my $oatom = $atoms[$iatom];
-        my $matom = $mol->get_atoms($iatom); 
-
-        unless ($oatom->Z == $matom->Z ){
-          croak "atom $iatom has changed Z\n";
-        }
-        # atoms will generally not have forces
-
-        unless ($self->ignore_forces){
-          $matom->push_forces(V(999,999,999)) until ($matom->count_forces == $matom->count_coords );
-        }
-
-        $matom->push_forces($oatom->force) unless ($self->ignore_forces);
-        $matom->push_coords($oatom->xyz);
-
-      }
-
-    }
-    else {
-      $self->mol(HackaMol::Molecule->new(atoms=>[@atoms]));
-    }
-
-    $self->mol->push_energy($engrad{energy});
-    return @out;
+    return ($mol,@out);
 }
 
 sub opt {
